@@ -142,4 +142,56 @@ objB:
     const completion = await parseSetup(content, 2, 4);
     expect(completion.items).is.not.empty;
   });
+
+  // todo fix https://github.com/p-spacek/yaml-language-server/issues/20
+  it.skip('Autocomplete with nextLine - nested object anyOf', async () => {
+    languageService.addSchema(SCHEMA_ID, {
+      type: 'object',
+      properties: {
+        scripts: {
+          type: 'object',
+          properties: {
+            sample: {
+              type: 'object',
+              properties: {
+                detail: {
+                  type: 'object',
+                  properties: {
+                    detail2: {
+                      anyOf: [
+                        {
+                          type: 'string',
+                          const: 'const1',
+                        },
+                        {
+                          type: 'object',
+                          properties: {
+                            list: {
+                              type: 'string',
+                            },
+                            parent: {
+                              type: 'string',
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    const content = 'scripts:\n  sample:\n    detail:\n      detail2:\n        ';
+    const completion = await parseSetup(content + '\nnewLine: test', 4, 8);
+    completion;
+    expect(completion.items.length).equal(1);
+    expect(completion.items[0]).to.be.deep.equal(
+      createExpectedCompletion('detail2', 'detail2: ${1:test}', 3, 6, 3, 6, 10, 2, {
+        documentation: '',
+      })
+    );
+  });
 });
