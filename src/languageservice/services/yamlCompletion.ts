@@ -44,6 +44,8 @@ const doubleQuotesEscapeRegExp = /[\\]+"/g;
 
 const ctxSymbolLabel = '=@ctx';
 const ctxSymbol = '@ctx';
+const ctxSymbolQuoted = '"@ctx"';
+const ctxPrefixSymbol = '@';
 
 const parentCompletionKind = CompletionItemKind.Class;
 
@@ -115,12 +117,12 @@ export class YamlCompletion {
     }
 
     const lineCtx =
-      ctxSymbol &&
+      ctxPrefixSymbol &&
       lineContent
         .substring(0, position.character) // take lineContent only to cursor position
-        .match(new RegExp(`(${ctxSymbol})(?!.*\\1).*$`)); // https://regex101.com/r/2ewq5g/2 takes last occurrence of the ctx to the end
+        .match(new RegExp(`=?(${ctxPrefixSymbol})(?!.*\\1).*$`)); // https://regex101.com/r/2ewq5g/2 takes last occurrence of the ctx to the end
     if (lineCtx) {
-      result = await this.doInlineCompletion(document, position, '=' + lineCtx[0]);
+      result = await this.doInlineCompletion(document, position, lineCtx[0]);
       return result;
     }
     // auto add space after : if needed
@@ -241,7 +243,10 @@ export class YamlCompletion {
 
     resultLocal.items.forEach((inlineItem) => {
       let inlineText = inlineItem.insertText;
-      inlineText = inlineText.replace(/:\n?\s*(\$1)?/g, '.').replace(/\.$/, '');
+      inlineText = inlineText
+        .replace(/:\n?\s*(\$1)?/g, '.')
+        .replace(/\.$/, '')
+        .replace(ctxSymbolQuoted, ctxSymbol);
       inlineItem.insertText = inlineText;
       if (inlineItem.textEdit) {
         inlineItem.textEdit.newText = inlineText;
@@ -259,13 +264,13 @@ export class YamlCompletion {
   }
   private processInlineInitialization(result: CompletionList, lineContent: string): void {
     // make always inline - happens when general completion returns inline label
-    const inlineItem = result.items.find((item) => item.label === ctxSymbolLabel);
-    if (inlineItem) {
-      inlineItem.insertText = (lineContent.match(/:\n?$/) ? ' ' : '') + ctxSymbolLabel;
+    const inlineItems = result.items.filter((item) => item.label === ctxSymbolLabel || item.label === ctxSymbol);
+    inlineItems.forEach(function (inlineItem) {
+      inlineItem.insertText = (lineContent.match(/:\n?$/) ? ' ' : '') + inlineItem.label;
       if (inlineItem.textEdit) {
         inlineItem.textEdit.newText = inlineItem.insertText;
       }
-    }
+    });
   }
 
   private addUniquePostfix(uri: string): string {
