@@ -14,6 +14,9 @@ import assert = require('assert');
 import { expect } from 'chai';
 import { createExpectedCompletion } from './utils/verifyError';
 
+const ctxSymbolLabel = '=@ctx';
+const ctxSymbol = '@ctx';
+
 describe('Auto Completion Tests Extended', () => {
   let languageSettingsSetup: ServiceSetup;
   let languageService: LanguageService;
@@ -70,8 +73,9 @@ describe('Auto Completion Tests Extended', () => {
       const completion = parseSetup(content, content.length);
       completion
         .then(function (result) {
-          assert.equal(result.items.length, 1);
-          assert.equal(result.items[0].insertText, '=@ctx');
+          assert.equal(result.items.length, 2);
+          assert.equal(result.items[0].insertText, ctxSymbolLabel);
+          assert.equal(result.items[1].insertText, ctxSymbol);
         })
         .then(done, done);
     });
@@ -81,8 +85,9 @@ describe('Auto Completion Tests Extended', () => {
       const completion = parseSetup(content, 7);
       completion
         .then(function (result) {
-          assert.equal(result.items.length, 1);
-          assert.equal(result.items[0].insertText, '=@ctx');
+          assert.equal(result.items.length, 2);
+          assert.equal(result.items[0].insertText, ctxSymbolLabel);
+          assert.equal(result.items[1].insertText, ctxSymbol);
         })
         .then(done, done);
     });
@@ -119,9 +124,10 @@ describe('Auto Completion Tests Extended', () => {
       const completion = parseSetup(content, content.length);
       completion
         .then(function (result) {
-          assert.equal(result.items.length, 2);
+          assert.equal(result.items.length, 3);
           assert.equal(result.items[0].insertText, '\n  prop1: ');
-          assert.equal(result.items[1].insertText, '=@ctx');
+          assert.equal(result.items[1].insertText, ctxSymbolLabel);
+          assert.equal(result.items[2].insertText, ctxSymbol);
         })
         .then(done, done);
     });
@@ -131,7 +137,7 @@ describe('Auto Completion Tests Extended', () => {
       const completion = parseSetup(content, content.length);
       completion
         .then(function (result) {
-          assert.equal(result.items.length, 2); // better to have 1 here
+          assert.equal(result.items.length, 3); // better to have 1 here
           assert.equal(result.items[0].label, 'prop1');
         })
         .then(done, done);
@@ -142,9 +148,10 @@ describe('Auto Completion Tests Extended', () => {
       const completion = parseSetup(content, content.length);
       completion
         .then(function (result) {
-          assert.equal(result.items.length, 3);
+          assert.equal(result.items.length, 4);
           assert.equal(result.items[0].insertText, 'const1');
-          assert.equal(result.items[2].insertText, '=@ctx');
+          assert.equal(result.items[2].insertText, ctxSymbolLabel);
+          assert.equal(result.items[3].insertText, ctxSymbol);
         })
         .then(done, done);
     });
@@ -184,8 +191,9 @@ describe('Auto Completion Tests Extended', () => {
         const completion = parseSetup(content, content.length);
         completion
           .then(function (result) {
-            assert.equal(result.items.length, 1);
-            assert.equal(result.items[0].insertText, '=@ctx');
+            assert.equal(result.items.length, 2);
+            assert.equal(result.items[0].insertText, ctxSymbolLabel);
+            assert.equal(result.items[1].insertText, ctxSymbol);
           })
           .then(done, done);
       });
@@ -195,8 +203,9 @@ describe('Auto Completion Tests Extended', () => {
         const completion = parseSetup(content, content.length);
         completion
           .then(function (result) {
-            assert.equal(result.items.length, 1);
-            assert.equal(result.items[0].insertText, '=@ctx');
+            assert.equal(result.items.length, 2);
+            assert.equal(result.items[0].insertText, ctxSymbolLabel);
+            assert.equal(result.items[1].insertText, ctxSymbol);
           })
           .then(done, done);
       });
@@ -232,19 +241,27 @@ describe('Auto Completion Tests Extended', () => {
         assert.strictEqual(result.items.length, 2);
         assert.strictEqual(result.items[0].insertText, 'user');
       });
-      it('ctx with comment', async () => {
+      it('ctx within comment', async () => {
         languageService.addSchema(SCHEMA_ID, inlineObjectSchema);
         const content = 'value: =@ctx. #comment';
         const result = await parseSetup(content, 'value: =@ctx.'.length);
         assert.strictEqual(result.items.length, 2);
         assert.strictEqual(result.items[0].insertText, 'user');
       });
-      it('ctx with jsonata expression', async () => {
+      it('ctx within jsonata expression', async () => {
         languageService.addSchema(SCHEMA_ID, inlineObjectSchema);
         const content = 'value: =@ctx.test1+@ctx.da';
         const result = await parseSetup(content, content.length);
         assert.strictEqual(result.items.length, 2);
         assert.strictEqual(result.items[1].insertText, 'data');
+      });
+      it('@ct within jsonata expression', async () => {
+        languageService.addSchema(SCHEMA_ID, inlineObjectSchema);
+        const content = 'value: =@ctx.test1+@ct';
+        const result = await parseSetup(content, content.length);
+        assert.strictEqual(result.items.length, 2);
+        assert.strictEqual(result.items[0].insertText, ctxSymbolLabel);
+        assert.strictEqual(result.items[1].insertText, ctxSymbol);
       });
       it('ctx with predicate', async () => {
         languageService.addSchema(SCHEMA_ID, inlineObjectSchema);
@@ -265,7 +282,7 @@ describe('Auto Completion Tests Extended', () => {
       const content = 'nested:\n  scripts:\n    sample:\n      test:';
       const result = await parseSetup(content, content.length);
 
-      expect(result.items.length).to.be.equal(6);
+      expect(result.items.length).to.be.equal(7);
       expect(result.items[0]).to.deep.equal(
         createExpectedCompletion('const1', ' const1', 3, 11, 3, 11, 12, 2, {
           documentation: undefined,
@@ -282,16 +299,21 @@ describe('Auto Completion Tests Extended', () => {
         })
       );
       expect(result.items[3]).to.deep.equal(
-        createExpectedCompletion('=@ctx', ' =@ctx', 3, 11, 3, 11, 10, 2, {
+        createExpectedCompletion(ctxSymbolLabel, ' =@ctx', 3, 11, 3, 11, 10, 2, {
           documentation: '',
         })
       );
       expect(result.items[4]).to.deep.equal(
+        createExpectedCompletion(ctxSymbol, ' @ctx', 3, 11, 3, 11, 10, 2, {
+          documentation: '',
+        })
+      );
+      expect(result.items[5]).to.deep.equal(
         createExpectedCompletion('objA', '\n  objA:\n    propI: ', 3, 11, 3, 11, 10, 2, {
           documentation: 'description of the parent prop',
         })
       );
-      expect(result.items[5]).to.deep.equal(
+      expect(result.items[6]).to.deep.equal(
         createExpectedCompletion('obj1', '\n  objA:\n    propI: ', 3, 11, 3, 11, 10, 2, {
           documentation: {
             kind: 'markdown',
@@ -307,7 +329,7 @@ describe('Auto Completion Tests Extended', () => {
       const content = 'nested:\n  scripts:\n    sample:\n      test: ';
       const result = await parseSetup(content, content.length);
 
-      expect(result.items.length).to.be.equal(6);
+      expect(result.items.length).to.be.equal(7);
       expect(result.items[0]).to.deep.equal(
         createExpectedCompletion('const1', 'const1', 3, 12, 3, 12, 12, 2, {
           documentation: undefined,
@@ -324,16 +346,21 @@ describe('Auto Completion Tests Extended', () => {
         })
       );
       expect(result.items[3]).to.deep.equal(
-        createExpectedCompletion('=@ctx', '=@ctx', 3, 12, 3, 12, 10, 2, {
+        createExpectedCompletion(ctxSymbolLabel, ctxSymbolLabel, 3, 12, 3, 12, 10, 2, {
           documentation: '',
         })
       );
       expect(result.items[4]).to.deep.equal(
+        createExpectedCompletion(ctxSymbol, ctxSymbol, 3, 12, 3, 12, 10, 2, {
+          documentation: '',
+        })
+      );
+      expect(result.items[5]).to.deep.equal(
         createExpectedCompletion('objA', '\n  objA:\n    propI: ', 3, 12, 3, 12, 10, 2, {
           documentation: 'description of the parent prop',
         })
       );
-      expect(result.items[5]).to.deep.equal(
+      expect(result.items[6]).to.deep.equal(
         createExpectedCompletion('obj1', '\n  objA:\n    propI: ', 3, 12, 3, 12, 10, 2, {
           documentation: {
             kind: 'markdown',
@@ -354,7 +381,7 @@ describe('Auto Completion Tests Extended', () => {
       const content = 'nested:\n  scripts:\n    sample:\n      test:\n        ';
       const result = await parseSetup(content + '\nnewLine: test', content.length);
 
-      expect(result.items.length).to.be.equal(5);
+      expect(result.items.length).to.be.equal(6);
       expect(result.items[0]).to.deep.equal(
         createExpectedCompletion('list', 'list: ', 4, 8, 4, 8, 10, 2, {
           documentation: '',
@@ -366,16 +393,21 @@ describe('Auto Completion Tests Extended', () => {
         })
       );
       expect(result.items[2]).to.deep.equal(
-        createExpectedCompletion('=@ctx', '=@ctx', 4, 8, 4, 8, 10, 2, {
+        createExpectedCompletion(ctxSymbolLabel, ctxSymbolLabel, 4, 8, 4, 8, 10, 2, {
           documentation: '',
         })
       );
       expect(result.items[3]).to.deep.equal(
+        createExpectedCompletion(ctxSymbol, ctxSymbol, 4, 8, 4, 8, 10, 2, {
+          documentation: '',
+        })
+      );
+      expect(result.items[4]).to.deep.equal(
         createExpectedCompletion('objA', 'objA:\n  propI: ', 4, 8, 4, 8, 10, 2, {
           documentation: 'description of the parent prop',
         })
       );
-      expect(result.items[4]).to.deep.equal(
+      expect(result.items[5]).to.deep.equal(
         createExpectedCompletion('obj1', 'objA:\n  propI: ', 4, 8, 4, 8, 10, 2, {
           documentation: {
             kind: 'markdown',
