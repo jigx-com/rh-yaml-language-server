@@ -86,6 +86,14 @@ export namespace RevalidateBySchemaRequest {
   export const type: RequestType<{ yaml: string; schema: unknown }, {}, {}> = new RequestType('custom/revalidateBySchema');
 }
 
+export namespace CompletionYamlRequest {
+  export const type: RequestType<
+    { yaml: string; position: TextDocumentPositionParams['position']; fileName: string },
+    {},
+    {}
+  > = new RequestType('custom/completionYaml');
+}
+
 export namespace SchemaSelectionRequests {
   export const type: NotificationType<void> = new NotificationType('yaml/supportSchemaSelection');
   export const getSchema: RequestType<string, JSONSchemaDescription[], {}> = new RequestType('yaml/get/jsonSchema');
