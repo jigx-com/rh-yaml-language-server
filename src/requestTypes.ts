@@ -89,8 +89,8 @@ export namespace RevalidateBySchemaRequest {
 export namespace CompletionYamlRequest {
   export const type: RequestType<
     { yaml: string; position: TextDocumentPositionParams['position']; fileName: string },
-    {},
-    {}
+    unknown,
+    unknown
   > = new RequestType('custom/completionYaml');
 }
 

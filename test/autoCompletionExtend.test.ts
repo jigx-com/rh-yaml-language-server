@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import { CompletionList, TextEdit } from 'vscode-languageserver/node';
+import { CompletionList } from 'vscode-languageserver/node';
 import { LanguageHandlers } from '../src/languageserver/handlers/languageHandlers';
 import { LanguageService } from '../src/languageservice/yamlLanguageService';
 import { SettingsState, TextDocumentTestManager } from '../src/yamlSettings';
