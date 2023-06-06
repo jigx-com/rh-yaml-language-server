@@ -308,7 +308,7 @@ export class YamlCompletion {
 
     this.arrayPrefixIndentation = '';
     let overwriteRange: Range = null;
-    const isOnlyHyphen = lineContent.match(/^\s*(-)\s*$/);
+    const isOnlyHyphen = lineContent.match(/^\s*(-)\s*($|#)/);
     if (areOnlySpacesAfterPosition) {
       overwriteRange = Range.create(position, Position.create(position.line, lineContent.length));
       const isOnlyWhitespace = lineContent.trim().length === 0;
