@@ -766,6 +766,54 @@ function validate(
         validationResult: ValidationResult;
         matchingSchemas: ISchemaCollector;
       } = null;
+
+      // jigx custom: remove subSchemas if the mustMatchProps (`type`, `provider`) is different
+      // another idea is to add some attribute to schema, so type will have `mustMatch` attribute - this could work in general not only for jigx
+      const mustMatchProps = ['type', 'provider'];
+      for (const mustMatch of mustMatchProps) {
+        const mustMatchYamlProp = node.children.find(
+          (ch): ch is PropertyASTNode => ch.type === 'property' && ch.keyNode.value === mustMatch && ch.valueNode.value !== null
+        );
+        // must match property is not in yaml, so continue as usual
+        if (!mustMatchYamlProp) {
+          continue;
+        }
+
+        // take only subSchemas that have the same mustMatch property in yaml and in schema
+        alternatives = alternatives.filter((subSchemaRef) => {
+          const subSchema = asSchema(subSchemaRef);
+
+          const typeSchemaProp = subSchema.properties?.[mustMatch];
+          const schemaTypeConst = typeof typeSchemaProp === 'object' && typeSchemaProp.const;
+          if (!schemaTypeConst) {
+            return true;
+          }
+          const yamlValue = mustMatchYamlProp.valueNode.value;
+          // yaml value has to be the same as schema value
+          return (
+            schemaTypeConst === yamlValue ||
+            (isString(schemaTypeConst) && isString(yamlValue) && schemaTypeConst.includes(yamlValue))
+          );
+        });
+
+        // if no match, just return
+        // example is jig.list with anyOf in the root... so types are in anyOf[0]
+        if (!alternatives.length) {
+          validationResult.problems.push({
+            location: { offset: node.offset, length: node.length },
+            severity: DiagnosticSeverity.Warning,
+            code: ErrorCode.EnumValueMismatch,
+            problemType: ProblemType.constWarning,
+            message: 'Must match property: ' + mustMatchProps.join(', '),
+          });
+          validationResult.enumValueMatch = false;
+          return 0;
+        }
+        // don't need to check other mustMatchProps (`type` => `provider`)
+        break;
+      }
+      // end jigx custom
+
       for (const subSchemaRef of alternatives) {
         /* jigx custom: creating new instance of schema doesn't make much sense
          * it loosing some props that are set inside validate
