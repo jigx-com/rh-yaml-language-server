@@ -784,16 +784,27 @@ function validate(
           const subSchema = asSchema(subSchemaRef);
 
           const typeSchemaProp = subSchema.properties?.[mustMatch];
-          const schemaTypeConst = typeof typeSchemaProp === 'object' && typeSchemaProp.const;
-          if (!schemaTypeConst) {
+
+          if (typeof typeSchemaProp !== 'object') {
+            // jig.list has anyOf in the root, so no `type` prop directly in that schema, so jig.list will be excluded in the next iteration
             return true;
           }
+          const subValidationResult = new ValidationResult(isKubernetes);
+          const subMatchingSchemas = matchingSchemas.newSub();
+          validate(mustMatchYamlProp, typeSchemaProp, subSchema, subValidationResult, subMatchingSchemas, options);
+          if (!subValidationResult.hasProblems()) {
+            return true;
+          }
+
+          // partial match with unfinished value
           const yamlValue = mustMatchYamlProp.valueNode.value;
-          // yaml value has to be the same as schema value
-          return (
-            schemaTypeConst === yamlValue ||
-            (isString(schemaTypeConst) && isString(yamlValue) && schemaTypeConst.includes(yamlValue))
-          );
+          if (
+            options.callFromAutoComplete &&
+            subValidationResult.enumValues?.some((enumValue) => enumValue.includes(yamlValue))
+          ) {
+            return true;
+          }
+          return false;
         });
 
         // if no match, just return
