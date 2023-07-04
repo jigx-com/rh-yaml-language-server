@@ -792,18 +792,20 @@ function validate(
           const subValidationResult = new ValidationResult(isKubernetes);
           const subMatchingSchemas = matchingSchemas.newSub();
           validate(mustMatchYamlProp, typeSchemaProp, subSchema, subValidationResult, subMatchingSchemas, options);
-          if (!subValidationResult.hasProblems()) {
-            return true;
-          }
-
-          // partial match with unfinished value
-          const yamlValue = mustMatchYamlProp.valueNode.value;
           if (
-            options.callFromAutoComplete &&
-            subValidationResult.enumValues?.some((enumValue) => enumValue.includes(yamlValue))
+            !subValidationResult.hasProblems() ||
+            // a little bit hack that I wasn't able to solve it in official YLS
+            // problem: some schemas look like this: `provider: { anyOf: [{enum: ['pr1', 'pr2']}, {type: 'string', title: 'expression'}] }`
+            //          and with yaml value `provider: =expression`
+            //          when it's invoked from code-completion both options are merged together as a possible option
+            //             note: if the anyOf order will be opposite, then the first one will be selected as the best match
+            //          but they are merged together also with problems, so even if one of the sub-schema has a problem, the second one can be ok
+            // solution: check if there are more possible schemas and check if there is only single problem
+            (subMatchingSchemas.schemas.length > 1 && subValidationResult.problems.length === 1)
           ) {
             return true;
           }
+
           return false;
         });
 
