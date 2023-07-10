@@ -770,6 +770,7 @@ function validate(
       // jigx custom: remove subSchemas if the mustMatchProps (`type`, `provider`) is different
       // another idea is to add some attribute to schema, so type will have `mustMatch` attribute - this could work in general not only for jigx
       const mustMatchProps = ['type', 'provider'];
+      const validationData: Record<(typeof mustMatchProps)[number], { node: IRange; values: string[] }> = {};
       for (const mustMatch of mustMatchProps) {
         const mustMatchYamlProp = node.children.find(
           (ch): ch is PropertyASTNode => ch.type === 'property' && ch.keyNode.value === mustMatch && ch.valueNode.value !== null
@@ -805,19 +806,25 @@ function validate(
           ) {
             return true;
           }
-
+          if (!validationData[mustMatch]) {
+            validationData[mustMatch] = { node: mustMatchYamlProp.valueNode, values: [] };
+          }
+          validationData[mustMatch].values.push(...subValidationResult.enumValues);
           return false;
         });
 
         // if no match, just return
         // example is jig.list with anyOf in the root... so types are in anyOf[0]
         if (!alternatives.length) {
+          const data = validationData[mustMatch];
+          // const values = [...new Set(data.values)];
           validationResult.problems.push({
-            location: { offset: node.offset, length: node.length },
+            location: { offset: data.node.offset, length: data.node.length },
             severity: DiagnosticSeverity.Warning,
             code: ErrorCode.EnumValueMismatch,
             problemType: ProblemType.constWarning,
-            message: 'Must match property: ' + mustMatchProps.join(', '),
+            message: 'Must match property: `' + mustMatch + '`', // with values: ' + values.map((value) => '`' + value + '`').join(', '),
+            // data: { values }, // not reliable problem with `list: anyOf: []`
           });
           validationResult.enumValueMatch = false;
           return 0;
