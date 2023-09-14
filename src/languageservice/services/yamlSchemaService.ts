@@ -164,7 +164,6 @@ export class YAMLSchemaService extends JSONSchemaService {
     const resolveErrors: string[] = schemaToResolve.errors.slice(0);
     let schema: JSONSchema = schemaToResolve.schema;
     const contextService = this.contextService;
-    const seen: Set<JSONSchema> = new Set();
 
     if (!schema07Validator(schema)) {
       const errs: string[] = [];
@@ -243,6 +242,7 @@ export class YAMLSchemaService extends JSONSchemaService {
       }
 
       const toWalk: JSONSchema[] = [node];
+      const seen: Set<JSONSchema> = new Set();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const openPromises: Promise<any>[] = [];
