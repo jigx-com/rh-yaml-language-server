@@ -775,6 +775,7 @@ export class YamlCompletion {
                         insertText,
                         insertTextFormat: InsertTextFormat.Snippet,
                         documentation: this.fromMarkup(propertySchema.markdownDescription) || propertySchema.description || '',
+                        ...(schema.schema.title ? { data: { schemaTitle: schema.schema.title } } : undefined),
                       },
                       didOneOfSchemaMatches
                     );
@@ -1727,4 +1728,28 @@ function evaluateTab1Symbol(value: string): string {
 
 function isParentCompletionItem(item: CompletionItemBase): item is CompletionItem {
   return 'parent' in item;
+}
+
+export function addDescriptionToDuplicityCompletionItem(result: CompletionList): void {
+  result.items.forEach((item, index, array) => {
+    if (!(item.data?.schemaTitle && typeof item.label === 'string')) {
+      return;
+    }
+    // get items with same label start from the index
+    const items = array.slice(index).filter((otherItem) => otherItem.label === item.label);
+    if (items.length <= 1) {
+      return;
+    }
+    // if there is more items with the same label, add detail of the schema title
+    for (const item of items) {
+      if (!item.data?.schemaTitle) {
+        continue;
+      }
+      // labelDetails is supported from v "vscode-languageserver-types": "^3.17.0"
+      // but it doesn't correspond with vscode.CompletionItem
+      item.labelDetails = { description: item.data.schemaTitle };
+      // object is not supported for server types, but it allows for vscode.CompletionItem
+      item.label = { label: item.label, description: item.data.schemaTitle };
+    }
+  });
 }

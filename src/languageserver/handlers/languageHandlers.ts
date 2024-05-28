@@ -36,6 +36,7 @@ import { SettingsState } from '../../yamlSettings';
 import { ValidationHandler } from './validationHandlers';
 import { ResultLimitReachedNotification } from '../../requestTypes';
 import * as path from 'path';
+import { addDescriptionToDuplicityCompletionItem } from '../../languageservice/services/yamlCompletion';
 
 export class LanguageHandlers {
   private languageService: LanguageService;
@@ -167,11 +168,16 @@ export class LanguageHandlers {
     if (!textDocument) {
       return Promise.resolve(result);
     }
-    return this.languageService.doComplete(
-      textDocument,
-      textDocumentPosition.position,
-      isKubernetesAssociatedDocument(textDocument, this.yamlSettings.specificValidatorPaths)
-    );
+    return this.languageService
+      .doComplete(
+        textDocument,
+        textDocumentPosition.position,
+        isKubernetesAssociatedDocument(textDocument, this.yamlSettings.specificValidatorPaths)
+      )
+      .then((result) => {
+        addDescriptionToDuplicityCompletionItem(result);
+        return result;
+      });
   }
 
   /**
