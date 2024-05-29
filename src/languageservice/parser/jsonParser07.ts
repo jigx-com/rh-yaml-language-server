@@ -1026,12 +1026,26 @@ function validate(
     }
 
     if (schema.deprecationMessage && node.parent) {
+      let possibleProperties: string[] | undefined;
+      let location = { offset: node.parent.offset, length: node.parent.length };
+      if (originalSchema.properties) {
+        const schemaProperties = Object.entries(originalSchema.properties)
+          .filter(([, value]) => value !== schema)
+          .map(([key]) => key);
+        const seenKeys = node?.parent?.parent?.children?.map((p) => (p.type === 'property' ? p.keyNode.value : undefined)) || [];
+        possibleProperties = schemaProperties.filter((key) => !seenKeys.includes(key));
+        if (node.parent.type === 'property') {
+          location = { offset: node.parent.offset, length: node.parent.keyNode.length };
+        }
+      }
       validationResult.problems.push({
-        location: { offset: node.parent.offset, length: node.parent.length },
+        location,
         severity: DiagnosticSeverity.Warning,
+        code: ErrorCode.Deprecated,
         message: schema.deprecationMessage,
         source: getSchemaSource(schema, originalSchema),
         schemaUri: getSchemaUri(schema, originalSchema),
+        ...(possibleProperties && { data: { properties: possibleProperties } }),
       });
     }
   }

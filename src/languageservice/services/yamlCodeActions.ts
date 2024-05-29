@@ -332,7 +332,7 @@ export class YamlCodeActions {
     ) {
       return (diagnostic.data as YamlDiagnosticData).values;
     } else if (
-      diagnostic.code === ErrorCode.PropertyExpected &&
+      (diagnostic.code === ErrorCode.PropertyExpected || diagnostic.code === ErrorCode.Deprecated) &&
       'properties' in diagnostic.data &&
       Array.isArray((diagnostic.data as YamlDiagnosticData).properties)
     ) {
