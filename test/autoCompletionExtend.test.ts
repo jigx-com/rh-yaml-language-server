@@ -441,6 +441,39 @@ describe('Auto Completion Tests Extended', () => {
       expect(completion.items.map((i) => i.insertText)).deep.equal(['entity1']);
     });
   });
+  describe('Allow schemas based on mustMatch properties', () => {
+    const schema: JSONSchema = {
+      type: 'object',
+      properties: {
+        options: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                provider: { type: 'string', const: 'test1' },
+              },
+              required: ['provider'],
+            },
+            {
+              type: 'object',
+              properties: {
+                provider: { type: 'string', const: 'testX' },
+                entity: { type: 'string', const: 'entityX' },
+              },
+              required: ['entity', 'provider'],
+            },
+          ],
+        },
+      },
+    };
+    it('Should also suggest less possible schema even if the second schema looks better', async () => {
+      schemaProvider.addSchema(SCHEMA_ID, schema);
+      const content = 'options:\n  provider: |\n|  entity: entityX\n';
+      const completion = await parseCaret(content);
+
+      expect(completion.items.map((i) => i.insertText)).deep.equal(['test1', 'testX']);
+    });
+  });
   describe('Chain of single properties', () => {
     const schema: JSONSchema = {
       type: 'object',
