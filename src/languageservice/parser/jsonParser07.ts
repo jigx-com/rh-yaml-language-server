@@ -777,10 +777,11 @@ function validate(
       // jigx custom: remove subSchemas if the mustMatchProps (`type`, `provider`) is different
       // another idea is to add some attribute to schema, so type will have `mustMatch` attribute - this could work in general not only for jigx
       const mustMatchProps = ['type', 'provider'];
+      const mustMatchSchemas: JSONSchema[] = [];
       const validationData: Record<(typeof mustMatchProps)[number], { node: IRange; values: string[] }> = {};
       for (const mustMatch of mustMatchProps) {
         const mustMatchYamlProp = node.children.find(
-          (ch): ch is PropertyASTNode => ch.type === 'property' && ch.keyNode.value === mustMatch && ch.valueNode.value !== null
+          (ch): ch is PropertyASTNode => ch.type === 'property' && ch.keyNode.value === mustMatch // && ch.valueNode.value !== null
         );
         // must match property is not in yaml, so continue as usual
         if (!mustMatchYamlProp) {
@@ -813,6 +814,11 @@ function validate(
             // solution: check if there are more possible schemas and check if there is only single problem
             (subMatchingSchemas.schemas.length > 1 && subValidationResult.problems.length === 1)
           ) {
+            // we have enum/const match on mustMatch prop
+            // so we want to use this schema forcely in genericComparison mechanism
+            if (subValidationResult.enumValues?.length) {
+              mustMatchSchemas.push(subSchema);
+            }
             return true;
           }
           if (!validationData[mustMatch]) {
@@ -879,7 +885,16 @@ function validate(
         } else if (isKubernetes) {
           bestMatch = alternativeComparison(subValidationResult, bestMatch, subSchema, subMatchingSchemas);
         } else {
-          bestMatch = genericComparison(node, maxOneMatch, subValidationResult, bestMatch, subSchema, subMatchingSchemas);
+          bestMatch = genericComparisonJigx(
+            node,
+            maxOneMatch,
+            subValidationResult,
+            bestMatch,
+            subSchema,
+            subMatchingSchemas,
+            mustMatchSchemas
+          );
+          // bestMatch = genericComparison(node, maxOneMatch, subValidationResult, bestMatch, subSchema, subMatchingSchemas);
         }
       }
 
@@ -1628,6 +1643,26 @@ function validate(
     }
     return bestMatch;
   }
+
+  // jigx custom - some extra check instead of genericComparison
+  function genericComparisonJigx(
+    node: ASTNode,
+    maxOneMatch,
+    subValidationResult: ValidationResult,
+    bestMatch: IValidationMatch,
+    subSchema,
+    subMatchingSchemas: ISchemaCollector,
+    mustMatchSchemas: JSONSchema[]
+  ): IValidationMatch {
+    // if schema is in mustMatchSchemas to allows all types, providers in autocomplete
+    // it allows to suggest any type/provider regardless of the anyOf schemas validation
+    if (callFromAutoComplete && mustMatchSchemas.includes(subSchema)) {
+      mergeValidationMatches(bestMatch, subMatchingSchemas, subValidationResult);
+      return bestMatch;
+    }
+    return genericComparison(node, maxOneMatch, subValidationResult, bestMatch, subSchema, subMatchingSchemas);
+  }
+  // end jigx custom
 
   //genericComparison tries to find the best matching schema using a generic comparison
   function genericComparison(
