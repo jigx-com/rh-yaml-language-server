@@ -846,13 +846,15 @@ function validate(
             // data: { values }, // not reliable problem with `list: anyOf: []`
           });
           validationResult.enumValueMatch = false;
-          return 0;
+          // if there is no match in schemas, return all alternatives so the hover can display all possibilities
+          break;
         }
         // don't need to check other mustMatchProps (`type` => `provider`)
         break;
       }
 
-      alternatives = alternativesFiltered;
+      // if there is no match in schemas, return all alternatives so the hover can display all possibilities
+      alternatives = alternativesFiltered.length ? alternativesFiltered : alternatives;
       // end jigx custom
 
       for (const subSchemaRef of alternatives) {
