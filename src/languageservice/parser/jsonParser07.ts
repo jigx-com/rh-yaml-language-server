@@ -816,7 +816,7 @@ function validate(
           ) {
             // we have enum/const match on mustMatch prop
             // so we want to use this schema forcely in genericComparison mechanism
-            if (subValidationResult.enumValues?.length) {
+            if (subValidationResult.enumValueMatch && subValidationResult.enumValues?.length) {
               mustMatchSchemas.push(subSchema);
             }
             return true;
@@ -1659,7 +1659,15 @@ function validate(
     // if schema is in mustMatchSchemas to allows all types, providers in autocomplete
     // it allows to suggest any type/provider regardless of the anyOf schemas validation
     if (callFromAutoComplete && mustMatchSchemas.includes(subSchema)) {
-      mergeValidationMatches(bestMatch, subMatchingSchemas, subValidationResult);
+      if (!mustMatchSchemas.includes(bestMatch.schema)) {
+        bestMatch = {
+          schema: subSchema,
+          validationResult: subValidationResult,
+          matchingSchemas: subMatchingSchemas,
+        };
+      } else {
+        mergeValidationMatches(bestMatch, subMatchingSchemas, subValidationResult);
+      }
       return bestMatch;
     }
     return genericComparison(node, maxOneMatch, subValidationResult, bestMatch, subSchema, subMatchingSchemas);
