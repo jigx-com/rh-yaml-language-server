@@ -787,6 +787,12 @@ function validate(
         if (!mustMatchYamlProp) {
           continue;
         }
+        // if there will be problem with providers with expression, we can exclude it from this optimization
+        // const mustMatchYamlPropValue = mustMatchYamlProp.valueNode.value;
+        // // value is expression, we can't prioritize or exclude schemas based on this value
+        // if (isExpressionStr(mustMatchYamlPropValue)) {
+        //   continue;
+        // }
 
         // take only subSchemas that have the same mustMatch property in yaml and in schema
         alternativesFiltered = alternatives.filter((subSchemaRef) => {
@@ -804,7 +810,7 @@ function validate(
           if (
             !subValidationResult.hasProblems() ||
             // allows some of the other errors like: patterns validations
-            subValidationResult.enumValueMatch ||
+            subValidationResult.enumValueMatch //||
             // a little bit hack that I wasn't able to solve it in official YLS
             // problem: some schemas look like this: `provider: { anyOf: [{enum: ['pr1', 'pr2']}, {type: 'string', title: 'expression'}] }`
             //          and with yaml value `provider: =expression`
@@ -812,13 +818,21 @@ function validate(
             //             note: if the anyOf order will be opposite, then the first one will be selected as the best match
             //          but they are merged together also with problems, so even if one of the sub-schema has a problem, the second one can be ok
             // solution: check if there are more possible schemas and check if there is only single problem
-            (subMatchingSchemas.schemas.length > 1 && subValidationResult.problems.length === 1)
+            // (subMatchingSchemas.schemas.length > 1 && subValidationResult.problems.length === 1)
           ) {
             // we have enum/const match on mustMatch prop
             // so we want to use this schema forcely in genericComparison mechanism
             if (subValidationResult.enumValueMatch && subValidationResult.enumValues?.length) {
               mustMatchSchemas.push(subSchema);
             }
+            // it matches some enum but not the current one, so it's not correct schemas
+            // if (
+            //   !subValidationResult.enumValueMatch && // don't match enum
+            //   subValidationResult.enumValues.length && // but has enum or const in schema
+            //   !subValidationResult.enumValues.includes(mustMatchYamlPropValue) // if it's not in schema.enum, then it's not correct schema
+            // ) {
+            //   return false;
+            // }
             return true;
           }
           if (!validationData[mustMatch]) {
@@ -1667,6 +1681,15 @@ function validate(
         };
       } else {
         mergeValidationMatches(bestMatch, subMatchingSchemas, subValidationResult);
+        // could be inside mergeValidationMatches fn but better to avoid conflicts
+        bestMatch.validationResult.primaryValueMatches = Math.max(
+          bestMatch.validationResult.primaryValueMatches,
+          subValidationResult.primaryValueMatches
+        );
+        bestMatch.validationResult.propertiesMatches = Math.max(
+          bestMatch.validationResult.propertiesMatches,
+          subValidationResult.propertiesMatches
+        );
       }
       return bestMatch;
     }
