@@ -239,7 +239,8 @@ export class YAMLSchemaService extends JSONSchemaService {
         return resolveRefs(node, unresolvedSchema.schema, uri, referencedHandle.dependencies);
       });
     };
-
+    let seenCount = 0;
+    let iterations = 0;
     const resolveRefs = async (
       node: JSONSchema,
       parentSchema: JSONSchema,
@@ -287,6 +288,7 @@ export class YAMLSchemaService extends JSONSchemaService {
           }
         }
       };
+
       const handleRef = (next: JSONSchema): void => {
         const seenRefs = new Set();
         while (next.$ref) {
@@ -339,8 +341,10 @@ export class YAMLSchemaService extends JSONSchemaService {
       }
 
       while (toWalk.length) {
+        iterations++;
         const next = toWalk.pop();
         if (seen.has(next)) {
+          seenCount++;
           continue;
         }
         seen.add(next);
@@ -348,8 +352,12 @@ export class YAMLSchemaService extends JSONSchemaService {
       }
       return Promise.all(openPromises);
     };
-
+    const start = new Date().getTime();
     await resolveRefs(schema, schema, schemaURL, dependencies);
+    const duration = (new Date().getTime() - start) / 1000;
+    if (duration > 0.5) {
+      console.log('resolveRefs - END' + JSON.stringify({ duration, schemaURL, iterations, seenCount }));
+    }
     return new ResolvedSchema(schema, resolveErrors);
   }
 
