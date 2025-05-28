@@ -67,7 +67,7 @@ describe('Hover Tests Detail', () => {
 ----
 ##
 \`\`\`
-test: \`const1\` | object | Expression | string | obj1
+test: const1 | object | Expression | string | obj1
 \`\`\``
     );
     // related to test 'Hover on null property in nested object'

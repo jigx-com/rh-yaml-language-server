@@ -196,7 +196,8 @@ export class Schema_Enum extends Schema_TypeBase {
   type: S_SimpleType;
   enum: string[];
   getTypeStr(): string {
-    const enumList = (this.enum?.slice(0, 5).join(', ') || this.type) + (this.enum?.length > 5 ? ', ...' : '');
+    const orderedEnum = this.enum?.sort();
+    const enumList = (orderedEnum?.slice(0, 5).join(', ') || this.type) + (orderedEnum?.length > 5 ? ', ...' : '');
     return `Enum${char_lt}${enumList}${char_gt}`;
   }
 }
@@ -204,7 +205,7 @@ export class Schema_Const extends Schema_TypeBase {
   type: 'const';
   const: string;
   getTypeStr(): string {
-    return `\`${this.const}\``;
+    return this.const;
   }
 }
 
