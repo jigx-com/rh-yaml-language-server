@@ -215,7 +215,7 @@ export class Schema_ArrayTyped extends Schema_TypeBase {
   getTypeStr(subSchemas: []): string {
     const item = SchemaTypeFactory.CreatePropTypeInstance(this.items);
     const subType = item.getTypeStr(subSchemas);
-    return `${subType}[]`;
+    return this.finalizeType(item, subType);
   }
   getTypeMD(subSchemas: [], isForElementTitle = false): string {
     const item = SchemaTypeFactory.CreatePropTypeInstance(
@@ -224,6 +224,13 @@ export class Schema_ArrayTyped extends Schema_TypeBase {
       this.isPropRequired /* jc-line-chart:series(object[])required */
     );
     const subType = item.getTypeMD(subSchemas, isForElementTitle);
+    return this.finalizeType(item, subType);
+  }
+
+  finalizeType(item: Schema_AnyType, subType: string): string {
+    if (item instanceof Schema_AnyOf || item instanceof Schema_SimpleAnyOf) {
+      return `Array<${subType}>`;
+    }
     return `${subType}[]`;
   }
 }
