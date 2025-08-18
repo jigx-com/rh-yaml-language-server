@@ -1123,8 +1123,9 @@ export class YamlCompletion {
       return;
     }
 
+    let valueNode: Node;
     if (isPair(node)) {
-      const valueNode: Node = node.value as Node;
+      valueNode = node.value as Node;
       if (valueNode && valueNode.range && offset > valueNode.range[0] + valueNode.range[2]) {
         return; // we are past the value node
       }
@@ -1136,6 +1137,14 @@ export class YamlCompletion {
       const separatorAfter = '';
       const matchingSchemas = doc.getMatchingSchemas(schema.schema, -1, null, doComplete);
       for (const s of matchingSchemas) {
+        // jigx custom: enable condition for value property completion
+        const isValuePropertyWithSchemaCondition =
+          isScalar(valueNode) && s.node.internalNode === valueNode && s.schema.$comment === 'then/else';
+        if (isValuePropertyWithSchemaCondition) {
+          this.addSchemaValueCompletions(s.schema, separatorAfter, collector, types, 'value');
+          continue;
+        }
+        // end jigx custom
         if (s.node.internalNode === node && !s.inverted && s.schema) {
           if (s.schema.items) {
             this.collectDefaultSnippets(s.schema, separatorAfter, collector, {
@@ -1154,12 +1163,14 @@ export class YamlCompletion {
               }
             }
           }
+
           if (s.schema.properties) {
             const propertySchema = s.schema.properties[parentKey];
             if (propertySchema) {
               this.addSchemaValueCompletions(propertySchema, separatorAfter, collector, types, 'value');
             }
           }
+
           if (s.schema.additionalProperties) {
             this.addSchemaValueCompletions(s.schema.additionalProperties, separatorAfter, collector, types, 'value');
           }
