@@ -1163,14 +1163,12 @@ export class YamlCompletion {
               }
             }
           }
-
           if (s.schema.properties) {
             const propertySchema = s.schema.properties[parentKey];
             if (propertySchema) {
               this.addSchemaValueCompletions(propertySchema, separatorAfter, collector, types, 'value');
             }
           }
-
           if (s.schema.additionalProperties) {
             this.addSchemaValueCompletions(s.schema.additionalProperties, separatorAfter, collector, types, 'value');
           }
