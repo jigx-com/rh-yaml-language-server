@@ -23,6 +23,8 @@ export class ValidationHandler {
     this.yamlSettings = yamlSettings;
 
     this.yamlSettings.documents.onDidChangeContent((change) => {
+      console.log('onDidChangeContent: ' + change.document.uri);
+
       this.validate(change.document);
     });
     this.yamlSettings.documents.onDidClose((event) => {
@@ -56,6 +58,8 @@ export class ValidationHandler {
     return this.languageService
       .doValidation(textDocument, isKubernetesAssociatedDocument(textDocument, this.yamlSettings.specificValidatorPaths))
       .then((diagnosticResults) => {
+        console.log('validateTextDocument: ' + textDocument.uri);
+
         const diagnostics: Diagnostic[] = [];
         for (const diagnosticItem of diagnosticResults) {
           // Convert all warnings to errors
