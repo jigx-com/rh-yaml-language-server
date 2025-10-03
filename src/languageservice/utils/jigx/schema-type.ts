@@ -196,7 +196,10 @@ export class Schema_Enum extends Schema_TypeBase {
   type: S_SimpleType;
   enum: string[];
   getTypeStr(): string {
-    const orderedEnum = this.enum?.sort();
+    if (!this.enum) {
+      return 'Enum';
+    }
+    const orderedEnum = [...this.enum].sort();
     const enumList = (orderedEnum?.slice(0, 5).join(', ') || this.type) + (orderedEnum?.length > 5 ? ', ...' : '');
     return `Enum${char_lt}${enumList}${char_gt}`;
   }

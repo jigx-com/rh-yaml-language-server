@@ -186,7 +186,7 @@ export class Schema2Md {
       if (!this.hideText.enum) {
         text.push(offset + 'This element must be one of the following enum values:');
       }
-      const orderedEnum = schema.enum.sort();
+      const orderedEnum = [...schema.enum].sort();
       if (schema.enum.length > 50) {
         text.push(offset + '`' + orderedEnum.join(' | ') + '`');
       } else {
