@@ -49,7 +49,7 @@ The following settings are supported:
 - `http.proxyStrictSSL`: If true the proxy server certificate should be verified against the list of supplied CAs. Default is false.
 - `[yaml].editor.formatOnType`: Enable/disable on type indent and auto formatting array
 - `yaml.disableDefaultProperties`: Disable adding not required properties with default values into completion text
-- `yaml.suggest.parentSkeletonSelectedFirst`: If true, the user must select some parent skeleton first before autocompletion starts to suggest the rest of the properties.\nWhen yaml object is not empty, autocompletion ignores this setting and returns all properties and skeletons.
+- `yaml.suggest.parentSkeletonSelectedFirst`: If true, the user must select some parent skeleton first before autocompletion starts to suggest the rest of the properties. When yaml object is not empty, autocompletion ignores this setting and returns all properties and skeletons.
 - `yaml.style.flowMapping` : Forbids flow style mappings if set to `forbid` 
 - `yaml.style.flowSequence` : Forbids flow style sequences if set to `forbid`
 - `yaml.keyOrdering` : Enforces alphabetical ordering of keys in mappings when set to `true`. Default is `false`
@@ -388,6 +388,7 @@ This repository only contains the server implementation. Here are some known cli
 - [Vim-EasyComplete](https://github.com/jayli/vim-easycomplete) for Vim/NeoVim
 - [nova-yaml](https://github.com/robb-j/nova-yaml/) for Nova
 - [volar-service-yaml](https://github.com/volarjs/services/tree/master/packages/yaml) for Volar
+- [Kate](https://kate-editor.org/)
 
 ## Developer Support
 

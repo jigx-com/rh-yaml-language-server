@@ -1430,9 +1430,7 @@ function validate(
           const problem = {
             location: location,
             severity: DiagnosticSeverity.Warning,
-            message:
-              getWarningMessage(ProblemType.missingRequiredPropWarning, [propertyName]) +
-              (schema.errorMessage ? ` ${schema.errorMessage}` : ''),
+            message: schema.errorMessage || getWarningMessage(ProblemType.missingRequiredPropWarning, [propertyName]),
             source: getSchemaSource(schema, originalSchema),
             propertyName: propertyName,
             schemaUri: getSchemaUri(schema, originalSchema),
