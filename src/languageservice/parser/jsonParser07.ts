@@ -752,7 +752,7 @@ function validate(
         validationResult.problems.push({
           location: { offset: node.offset, length: node.length },
           severity: DiagnosticSeverity.Warning,
-          message: l10n.t('notSchemaWarning'),
+          message: notSchema.errorMessage || l10n.t('notSchemaWarning'),
           source: getSchemaSource(schema, originalSchema),
           schemaUri: getSchemaUri(schema, originalSchema),
         });
