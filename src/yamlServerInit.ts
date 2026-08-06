@@ -58,6 +58,10 @@ export class YAMLServerInit {
   }
 
   public async setupl10nBundle(params: InitializeParams): Promise<void> {
+    if (typeof fs.existsSync !== 'function') {
+      // browser/webworker bundle stubs out `fs`; keep the built-in English strings
+      return;
+    }
     const __dirname = path.dirname(__filename);
     const l10nPath: string = params.initializationOptions?.l10nPath || path.join(__dirname, '../../../l10n');
     const locale: string = params.locale || 'en';
